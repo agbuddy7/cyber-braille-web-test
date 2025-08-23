@@ -4,6 +4,8 @@
 
 ## 📖 About
 i want to digitallise braille
+so this just a python test i will be making an app
+in this you can just hover your mouse over the dots
 
 
 ## 📁 Project Structure
