@@ -1,4 +1,4 @@
-# Cyber Braille Web Test
+# Cyber Braille 
 
 A **web-based testing prototype** for the upcoming **Cyber Braille Android Application**.  
 This web version uses **audio feedback** on braille dots for demonstration and concept testing. The main Android app will feature **haptic vibration feedback** for braille learning.
