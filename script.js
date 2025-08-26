@@ -4,48 +4,163 @@ class BrailleApp {
         this.ctx = this.canvas.getContext('2d');
         this.hovering = false;
         this.audio = null;
-        
-        
-        this.circles = [
-            { x: 160, y: 60, radius: 8 },    // (0.2, 0.85)
-            { x: 240, y: 60, radius: 8 },    // (0.3, 0.85)
-            { x: 240, y: 80, radius: 8 },    // (0.3, 0.80)
-            { x: 320, y: 60, radius: 8 },    // (0.4, 0.85)
-            { x: 344, y: 60, radius: 8 },    // (0.43, 0.85)
-            { x: 400, y: 60, radius: 8 },    // (0.5, 0.85)
-            { x: 424, y: 60, radius: 8 },    // (0.53, 0.85)
-            { x: 424, y: 80, radius: 8 },    // (0.53, 0.80)
-            { x: 480, y: 60, radius: 8 },    // (0.6, 0.85)
-            { x: 504, y: 80, radius: 8 }     // (0.63, 0.80)
+        this.currentInput = '';
+
+        this.braillePatterns = {
+
+            //letters
+
+            'A': [0],
+            'B': [0,1],
+            'C': [0,3],
+            'D': [0,3,4],
+            'E': [0,4],
+            'F': [0,1,3],
+            'G': [0,1,3,4],
+            'H': [0,1,4],
+            'I': [1,3],
+            'J': [1,3,4],
+            'K': [0,2],
+            'L': [0,1,2],
+            'M': [0,2,3],
+            'N': [0,2,3,4],
+            'O': [0,2,4],
+            'P': [0,1,2,3],
+            'Q': [0,1,2,3,4],
+            'R': [0,1,2,4],
+            'S': [1,2,3],
+            'T': [1,2,3,4],
+            'U': [0,2,5],
+            'V': [0,1,2,5],
+            'W': [1,3,4,5],
+            'X': [0,2,3,5],
+            'Y': [0,2,3,4,5],
+            'Z': [0,2,4,5],
+
+            //Numbers
+
+            '1': [0],
+            '2': [0,1],
+            '3': [0,3],
+            '4': [0,3,4],
+            '5': [0,4],
+            '6': [0,1,3],
+            '7': [0,1,3,4],
+            '8': [0,1,4],
+            '9': [1,3]
+        };
+
+        // List of braille cell dot positions (relative)
+        this.dotPositions = [
+            { x: -12, y: -18 }, 
+            { x: -12, y: 0 },   
+            { x: -12, y: 18 },  
+            { x: 12, y: -18 }, 
+            { x: 12, y: 0 },   
+            { x: 12, y: 18 },   
         ];
-        
-        // Number labels positions
-        this.labels = [
-            { x: 160, y: 160, text: "1" },
-            { x: 240, y: 160, text: "2" },
-            { x: 320, y: 160, text: "3" },
-            { x: 400, y: 160, text: "4" },
-            { x: 480, y: 160, text: "5" }
-        ];
-        
+
+        this.cellWidth = 70;
+        this.cellHeight = 90;
+        this.marginLeft = 40;
+        this.marginTop = 60;
+        this.cellsPerLine = 10; 
+
+        this.circles = [];
+        this.labels = [];
+
         this.init();
     }
     
     init() {
         this.loadAudio();
+        this.setupInputHandlers();
+        this.updateActiveCircles();
         this.draw();
         this.setupEventListeners();
     }
+
+    setupInputHandlers() {
+        const input = document.getElementById('numberInput');
+        const clearBtn = document.getElementById('clearBtn');
+        const currentDisplay = document.getElementById('currentDisplay');
+        
+        if (input) {
+            input.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/[^A-Z0-9]/g, '');
+                e.target.value = value;
+                this.currentInput = value;
+
+                if (value) {
+                    currentDisplay.textContent = `Displaying output: ${value}`;
+                } else {
+                    currentDisplay.textContent = 'Enter number or alphabets to see the braille output';
+                }
+
+                this.updateActiveCircles();
+                this.draw();
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                if (input) input.value = '';
+                this.currentInput = '';
+                if (currentDisplay) currentDisplay.textContent = 'Enter numbers to see braille patterns';
+                this.updateActiveCircles();
+                this.draw();
+            });
+        }
+    }
+
+    updateActiveCircles() {
+    this.circles = [];
+    this.labels = [];
+    if (!this.currentInput) return;
+          
+
+    this.cellsPerLine = Math.floor((this.canvas.width - 2 * this.marginLeft) / this.cellWidth);
+    this.maxRows = Math.floor((this.canvas.height - this.marginTop) / this.cellHeight);
+
+  
+
+    let col = 0, row = 0;
+    for (let i = 0; i < this.currentInput.length; i++) {
+        const ch = this.currentInput[i];
+        this.addBrailleCell(ch, col, row);
+        col++;
+        if (col >= this.cellsPerLine) {
+            col = 0;
+            row++;
+        }
+    }
+}
+
+addBrailleCell(char, col, row) {
+    const pattern = this.braillePatterns[char];
+    if (!pattern) return;
+    const xBase = this.marginLeft + col * this.cellWidth;
+    const yBase = this.marginTop + row * this.cellHeight;
+    pattern.forEach(dotIdx => {
+        const pos = this.dotPositions[dotIdx];
+        this.circles.push({
+            x: xBase + pos.x,
+            y: yBase + pos.y,
+            radius: 8,
+            char,
+            dotIndex: dotIdx
+        });
+    });
+
+    this.labels.push({ x: xBase, y: yBase + 60, text: char });
+}
+    
     
     loadAudio() {
-       
         this.audio = new Audio();
-        
-        
         this.audio.src = 'hover.mp3';
         this.audio.load();
         
-        // If hover.mp3 fails, create a synthetic beep
         this.audio.onerror = () => {
             console.log('hover.mp3 not found, using synthetic beep');
             this.createSyntheticBeep();
@@ -53,7 +168,6 @@ class BrailleApp {
     }
     
     createSyntheticBeep() {
-       
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         this.audio = null; 
     }
@@ -63,7 +177,6 @@ class BrailleApp {
             this.audio.currentTime = 0;
             this.audio.play().catch(e => console.log('Audio play failed:', e));
         } else if (this.audioContext) {
-        
             const oscillator = this.audioContext.createOscillator();
             const gainNode = this.audioContext.createGain();
             
@@ -87,61 +200,63 @@ class BrailleApp {
     }
     
     draw() {
-   
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-       
-        this.ctx.font = '25px Arial';
-        this.ctx.fillStyle = 'black';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('Hover over the dots', this.canvas.width / 2, 30);
         
-        this.ctx.fillStyle = 'black';
+        // Draw circles (braille dots)
         this.circles.forEach(circle => {
             this.ctx.beginPath();
             this.ctx.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI);
+            this.ctx.fillStyle = '#000';
             this.ctx.fill();
         });
-        
-        this.ctx.font = '25px Arial';
-        this.ctx.fillStyle = 'black';
-        this.ctx.textAlign = 'center';
-        this.labels.forEach(label => {
-            this.ctx.fillText(label.text, label.x, label.y);
-        });
+
+        if (this.labels) {
+            this.labels.forEach(label => {
+                if (label) {
+                    this.ctx.fillStyle = '#333';
+                    this.ctx.font = '24px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(label.text, label.x, label.y);
+                }
+            });
+        }
     }
     
     setupEventListeners() {
-        this.canvas.addEventListener('mousemove', (event) => {
-            this.onHover(event);
+        this.canvas.addEventListener('mousemove', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            let isHoveringAnyCircle = false;
+            
+            this.circles.forEach(circle => {
+                const distance = Math.sqrt(
+                    Math.pow(mouseX - circle.x, 2) + Math.pow(mouseY - circle.y, 2)
+                );
+                
+                if (distance <= circle.radius) {
+                    isHoveringAnyCircle = true;
+                }
+            });
+            
+            if (isHoveringAnyCircle && !this.hovering) {
+                this.hovering = true;
+                this.playSound();
+            } else if (!isHoveringAnyCircle) {
+                this.hovering = false;
+            }
         });
         
         this.canvas.addEventListener('mouseleave', () => {
-            if (this.hovering) {
-                this.hovering = false;
-                this.stopSound();
+            this.hovering = false;
+        });
+        
+        this.canvas.addEventListener('click', () => {
+            if (this.audioContext && this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
             }
         });
-    }
-    
-    onHover(event) {
-        const rect = this.canvas.getBoundingClientRect();
-        const mouseX = event.clientX - rect.left;
-        const mouseY = event.clientY - rect.top;
-        
-        // Check if mouse is over any circle
-        const overAny = this.circles.some(circle => {
-            const dx = mouseX - circle.x;
-            const dy = mouseY - circle.y;
-            return Math.sqrt(dx * dx + dy * dy) <= circle.radius;
-        });
-        
-        if (overAny && !this.hovering) {
-            this.hovering = true;
-            this.playSound();
-        } else if (!overAny && this.hovering) {
-            this.hovering = false;
-            this.stopSound();
-        }
     }
 }
 
