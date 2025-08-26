@@ -31,7 +31,7 @@ The future Android app will include:
 **Features:**
 - Interactive braille dots with hover detection
 - Audio feedback when hovering over dots (`hover.mp3` or synthetic beep)
-- Visual representation of braille patterns (numbers 1-5)
+- Visual representation of braille patterns (numbers 1-9 and Capital letter A-Z)
 - Responsive design
 
 **Tech stack:** HTML5, JavaScript, Canvas, Web Audio API, CSS
@@ -86,7 +86,7 @@ cyber-braille-web-test/
 1. Open the application in your browser.
 2. Hover your mouse over the black braille dots.
 3. Listen for audio feedback.
-4. Observe and learn the braille patterns for numbers 1-5.
+4. Observe and learn the braille patterns for numbers and alphabets.
 
 ---
 
